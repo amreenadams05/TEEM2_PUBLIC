@@ -14,28 +14,100 @@ Install Python 3.9+ or ensure it is already installed
 
 Install the package directly from GitHub:
 ```
-pip install git+https://github.com/lujiec2020/TEEM2.git
+!pip install git+https://github.com/lujiec2020/TEEM2.git
 ```
 Install Dependencies 
 ```
-pip install datascience
-pip install pytz
+!pip install datascience
+!pip install pytz
 ```
 ## Input Data
-This project uses official data exports:
+This project uses data that follows the same internal structure as the official Instagram and TikTok exports.
 
-- Instagram export (JSON files inside a folder) 
+You may rename the folders or files however you want — the parser only requires that the JSON contents follow the official export format, not the original filenames.
 
-- TikTok export (user_data_tiktok.json)
+Supported inputs:
 
-- Place them in:
+- Instagram export (a folder containing the Instagram JSON files)
+
+- TikTok export (a JSON file matching the structure of user_data_tiktok.json)
+
+Example directory layout (names are flexible):
 ```
 data/
- ├── instagram_data/
- └── tiktok_data/
-      └── user_data_tiktok.json
+ ├── instagram_data/        # folder name can be anything
+ └── tiktok_data/           # folder name can be anything
+      └── user_data.json    # file name can be anything
 ```
-### Quick Start
+### Platform‑Specific File Detection 
+
+The parser identifies Instagram and TikTok files based on their internal JSON keys, not their filenames or folder names.
+
+To load TikTok data, you must pass it to the tiktok_events() or social_media_events() function via the tiktok_json argument.
+
+Example (correct usage):
+```
+python
+t = social_media_events(
+    instagram_folder="data/instagram_data",
+    tiktok_json="data/tiktok_data/user_data.json"
+)
+```
+## social_media_events() — Unified Event Loader
+
+Parses Instagram and TikTok exports, standardizes them into a unified schema, applies optional date filtering and timezone conversion, and returns a combined datascience.Table of all events.
+
+```
+social_media_events(
+    instagram_folder=None,
+    tiktok_json=None,
+    start_date=None,
+    end_date=None,
+    tz="America/New_York"
+)
+```
+### Parameters
+
+#### instagram_folder : str or None - Path to the folder containing Instagram JSON export files.
+
+- Folder name can be anything.
+- Files are detected by Instagram‑specific JSON keys, not filenames.
+- If None, Instagram data is skipped.
+
+#### tiktok_json : str or None - Path to the TikTok JSON export file.
+
+- File name can be anything.
+- Must follow the internal structure of the official TikTok export.
+- If None, TikTok data is skipped.
+
+#### start_date : str or None  
+Lower bound for filtering events by date.
+Accepted formats: "MM-DD-YYYY", "YYYY-MM-DD", "MM/DD/YYYY".
+
+#### end_date : str or None  
+Upper bound for filtering events by date.
+Same accepted formats as start_date.
+
+#### tz : str, default="America/New_York"  
+Timezone used to convert timestamps into localized datetime objects.
+Supports any valid IANA timezone string.
+
+### Returns
+A unified datascience.Table with the following standardized columns:
+| Column | Description |
+| --- | --- |
+| ``platform`` | ``"instagram"`` or ``"tiktok"`` |
+| ``action_type`` | Type of user action (like, view, comment, etc.) |
+| ``object_type`` | Content type (story, post, video, etc.) |
+| ``timestamp`` | Raw timestamp string |
+| ``timestamp_dt`` | Parsed timezone‑aware datetime |
+| ``target`` | Content or user interacted with |
+| ``value`` | Additional metadata |
+| ``hour``, ``weekday``, ``date`` | Optional derived features |
+
+
+
+## Quick Start
 ```
 from social_media_functions.parse_metadata import social_media_events
 
@@ -243,6 +315,22 @@ Amreen Adams and Giancarlos Aviles
 Questions? Reach out:  
 AD70738@umbc.edu  
 gaviles1@umbc.edu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
